@@ -82,51 +82,6 @@ for index, item in tqdm(otherdf.iterrows()):
 otherdata_sample = random.sample(otherdata, 500)
 otherdata_sample.extend([('Thank you!', '其他问题'),('You too!', '其他问题'),('It is a test', '其他问题'),('I just did', '其他问题')])
 
-# filepath2 = './result/131条数据校准.xlsx'
-# xiuzhengdf = pd.read_excel(filepath2).drop(['pred_name','pred_label','pred_proba'],axis=1)
-
-# # oridf2 = oridf.set_index('id').combine_first(xiuzhengdf.set_index('id')).reset_index().drop_duplicates('id', keep='first')
-
-# oridf.update(xiuzhengdf)
-
-# oridf = oridf.drop_duplicates('id', keep='first')
-# oridf.to_excel('./datasets/pred_0802_ori_quchong_correct.xlsx')
-# oridf2 = pd.merge(oridf, xiuzhengdf, how='left', on=['id','chatter_id','body'])
-    #             id_.append(item['id'])
-    #             chatid.append(item['chatter_id']])
-
-# 加载数据集
-# filepath = './datasets/ADA二批次数据校准_0803_drop.xlsx'
-# df1 = pd.read_excel(filepath, sheet_name='谷歌问题').drop_duplicates('id').drop(['pred_name','pred_label','pred_proba'],axis=1)
-# df1 = df1.drop_duplicates('body')[['id','chatter_id','body']]
-# df1['real_name'] = ['谷歌问题']*df1.shape[0]
-# df2 = pd.read_excel(filepath, sheet_name='充值').drop_duplicates('id').drop(['pred_name','pred_label','pred_proba'],axis=1)
-# df2 = df2.drop_duplicates('body')[['id','chatter_id','body']]
-# df2['real_name'] = ['充值']*df2.shape[0]
-
-
-# df3 = pd.read_excel(filepath, sheet_name='下币咨询和提现').drop_duplicates('id').drop(['pred_name','pred_label','pred_proba'],axis=1)
-# df3 = df3.drop_duplicates('body')[['id','chatter_id','body']]
-# df3['real_name'] = ['下币咨询和提现']*df3.shape[0]
-
-# df4 = pd.read_excel(filepath, sheet_name='KuCoin Earn').drop_duplicates('id').drop(['pred_name','pred_label','pred_proba'],axis=1)
-# df4 = df4.drop_duplicates('body')[['id','chatter_id','body']]
-# df4['real_name'] = ['KuCoin Earn']*df4.shape[0]
-
-
-# oridf = oridf.append(df1)
-# oridf = oridf.append(df2)
-# oridf = oridf.append(df3)
-# oridf = oridf.append(df4)
-# oridf.to_excel('./datasets/pred_0803_ori_quchong_correct_version2.xlsx')
-
-# data = label_df.replace(xiuzheng_df)
-
-# xiuzheng_df2 = label_df[label_df['real_name']=='合约强平']
-# oridf = oridf.replace(xiuzheng_df)
-# oridf = oridf.replace(xiuzheng_df2)
-
-
 labelfilepath = './datasets/Answer bot数据分类整理-0726-修正.xlsx'
 excel_reader=pd.ExcelFile(labelfilepath) # 指定文件 
 label_names = excel_reader.sheet_names
