@@ -187,27 +187,6 @@ class data_generator(DataGenerator):
                 batch_token_ids, batch_segment_ids, batch_labels = [], [], []
 
 
-class NonMaskingLayer(Layer):
-    """
-    fix convolutional 1D can't receive masked input, detail: https://github.com/keras-team/keras/issues/4978
-    thanks for https://github.com/jacoxu
-    """
-
-    def __init__(self, **kwargs):
-        self.supports_masking = True
-        super(NonMaskingLayer, self).__init__(**kwargs)
-
-    def build(self, input_shape):
-        pass
-
-    def compute_mask(self, inputs, input_mask=None):
-        # do not pass the mask to the next layers
-        return None
-
-    def call(self, x, mask=None):
-        return x
-
-
 def buildmodel(config):
     
     # 加载预训练模型
@@ -230,69 +209,6 @@ def buildmodel(config):
     model.summary()
     
     return model
-
-
-def buildmodelbertcnn(config):
-    # 加载预训练模型
-    bert = build_transformer_model(
-        config_path=config['config_path'],
-        checkpoint_path=config['checkpoint_path'],
-        model=config['pretrain_type'],
-        return_keras_model=False,
-    )
-    
-    #####
-    num_hidden_layers = [0,1,3,5]
-    features_layers = [bert.model.get_layer('Transformer-%d-FeedForward-Norm' % i).output \
-                                            for i in num_hidden_layers]
-    outputs = Concatenate()(features_layers)
-    outputs = NonMaskingLayer()(outputs)
-
-    ####CNN define
-    output_cnn = []
-    cnn_sizes = [2 ,3, 4]
-    
-    for size in cnn_sizes:
-        output = Conv1D(filters=K.int_shape(outputs)[-1], kernel_size = [size], 
-                        strides = 1, padding='same', activation='relu'
-                        )(outputs)
-        
-        output = GlobalMaxPool1D()(output)
-        
-        output_cnn.append(output)
-        
-    cnn_output = Concatenate()(output_cnn)
-    cnn_output = Dropout(0.2)(cnn_output)
-
-    output = Dense(
-        units=config['num_classes'],
-        activation='softmax',
-        kernel_initializer=bert.initializer
-    )(cnn_output)
-
-    model = keras.models.Model(bert.model.input, output)
-    model.summary()
-    
-    return model
-
-def multilabel_categorical_crossentropy(y_true, y_pred):
-    """多标签分类的交叉熵
-    说明：y_true和y_pred的shape一致，y_true的元素非0即1，
-         1表示对应的类为目标类，0表示对应的类为非目标类。
-    警告：请保证y_pred的值域是全体实数，换言之一般情况下y_pred
-         不用加激活函数，尤其是不能加sigmoid或者softmax！预测
-         阶段则输出y_pred大于0的类。如有疑问，请仔细阅读并理解
-         本文。
-    """
-    y_pred = (1 - 2 * y_true) * y_pred
-    y_pred_neg = y_pred - y_true * 1e12
-    y_pred_pos = y_pred - (1 - y_true) * 1e12
-    zeros = K.zeros_like(y_pred[..., :1])
-    y_pred_neg = K.concatenate([y_pred_neg, zeros], axis=-1)
-    y_pred_pos = K.concatenate([y_pred_pos, zeros], axis=-1)
-    neg_loss = K.logsumexp(y_pred_neg, axis=-1)
-    pos_loss = K.logsumexp(y_pred_pos, axis=-1)
-    return neg_loss + pos_loss
 
 
 def evaluate(data):
@@ -336,7 +252,6 @@ if __name__ == '__main__':
     evaluator = Evaluator()
     
     model = buildmodel(config)
-    # model = buildmodelbertcnn(config)
     # 派生为带分段线性学习率的优化器。
     # 其中name参数可选，但最好填入，以区分不同的派生优化器。
     AdamLR = extend_with_piecewise_linear_lr(Adam, name='AdamLR')
